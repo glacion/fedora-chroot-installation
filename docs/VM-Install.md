@@ -1,34 +1,12 @@
-# Fedora Installation via Chroot in an UEFI VM
-
-This step by step guide will cover how to install [Fedora](https://getfedora.org/) on a VM,
-like you would do with `debootstrap` on [Debian](https://www.debian.org/) or `pacstrap` on [Arch Linux](https://www.archlinux.org/).
-
-
-    # denotes the commands to be run as the root user.
-    $ denotes the commands to be run as a regular user or the root user.
-    (chroot) denotes the commands to be run in chroot.
-    Text without any of those denotations are not meant to be run.
 ## Pre Installation
 
-1. Get a Fedora Workstation [image](https://download.fedoraproject.org/pub/fedora/linux/releases/28/Workstation/x86_64/iso/Fedora-Workstation-Live-x86_64-28-1.1.iso).
+Download required scripts
 
-    **Note:** You should be able to go through this in every distribution 
-    but it is out of scope of this guide.
-
-2. Get comfortable with the live system. Configure network, keyboard layout, get root etc.
-
-3. Download required scripts
-
-       $ mkdir src ; cd src
-       $ wget https://github.com/glacion/easy-chroot/releases/download/v1.0/chroot
-       $ wget https://github.com/glacion/genfstab/releases/download/1.0/genfstab
-       $ wget https://raw.githubusercontent.com/glacion/fedora-chroot-installation/master/scripts/zz-efistub-upgrade.py
-       $ chmod +x *
-
-4. Disable selinux temporarily
-
-       # setenforce 0
-
+    $ mkdir src ; cd src
+    $ wget https://github.com/glacion/easy-chroot/releases/download/v1.0/chroot
+    $ wget https://github.com/glacion/genfstab/releases/download/1.0/genfstab
+    $ wget https://raw.githubusercontent.com/glacion/fedora-chroot-installation/master/scripts/zz-efistub-upgrade.py
+    $ chmod +x *
 
 ## Partitioning
 For this VM we will have 3 partitions for `/`, `/boot` and `swap`.
