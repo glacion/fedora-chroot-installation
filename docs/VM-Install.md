@@ -168,7 +168,7 @@ Let's go flag by flag on what this command does;
 * `rtkit` will be required for rebooting, powering off etc.
 * `file` is a tool to find the type of a file.
 * `efibootmgr` is the tool that we'll be using to manipulate EFI entries.
-* `@Core` is a very small set of packages that's sufficient enough for the system to function, not to be confused with the actual `base` group that you may find on fedora wiki.
+* `@Core` is a small set of packages that's sufficient enough for the system to function.
 
 ## Configuration
 
