@@ -39,7 +39,7 @@ Running `# cgdisk /dev/sda` gives us an error like;
 
 This is safe to ignore as in this case, our hard drive doesn't actually contain a partition table. 
 
-This probably won't be the case in real-world scenarios. Though if you'd like to nuke down your partition table(s), you can run `sgdisk -Z /dev/sda`.
+This probably won't be the case in real-world scenarios. Though if you'd like to nuke your partition table(s), you can run `sgdisk -Z /dev/sda`.
 
 
 After that this screen will greet us;
