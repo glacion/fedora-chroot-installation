@@ -131,7 +131,7 @@ After this your `lsblk` output should look like this;
 
 After we are done partitioning; we can finally install the base system onto our new partitions.
 
-    # dnf install --installroot=/mnt --releasever=28 --setopt=install_weak_deps=False glibc-langpack-en rtkit file efibootmgr deltarpm @Core
+    # dnf install --installroot=/mnt --releasever=28 --setopt=install_weak_deps=False glibc-langpack-en rtkit file efibootmgr deltarpm kernel @Core
 
 Confirm the prompts when asked.
 
@@ -141,7 +141,8 @@ Let's break down what this command does;
 * `--releasever=28` use Fedora 28 as target release, use `rawhide` if you want a 'rolling release' Fedora.
 * `--setopt=install_weak_deps=False` don't install weak dependencies(`--no-install-recommends` on Debian), more info about these switches can be found [here](https://dnf.readthedocs.io/en/latest/conf_ref.html)
 * `glibc-langpack-en` English langpack for glibc, in order to have a localized system install `glibc-langpack-<LANGCODE>` if no langpack is specified to install, dnf will install `glibc-all-langpacks` package which costs a whopping 100MB alone compared to installing them seperately which costs around 1MB per langpack. 
-* `rtkit`, `file`, `efibootmgr` See `dnf info <PACKAGE_NAME>` for details.
+* `rtkit`, `file`, `efibootmgr`, `deltarpm` See `dnf info <PACKAGE_NAME>` for details.
+* `kernel` is the Linux kernel.
 * `@Core` is a small set of packages that's sufficient enough for the system to function.
 
 ## Configuration
@@ -221,11 +222,7 @@ For safety reasons we'll also install & configure `systemd-boot` formerly known 
 
 **Note:** If you're following this guide from VirtualBox, you should stick to a traditional bootloader since it doesn't really like it when we modify EFI variables directly. 
 
-1. Start by installing the kernel itself.
-      
-       (chroot) dnf install kernel
-
-2. Installing `systemd-boot` as backup
+1. Installing `systemd-boot` as backup
         
        (chroot) bootctl install
     
@@ -242,7 +239,7 @@ For safety reasons we'll also install & configure `systemd-boot` formerly known 
     to;
 
        options    root=LABEL=fedora ro rhgb quiet
-3. Copy the kernel and initramfs
+2. Copy the kernel and initramfs
        
        (chroot) /etc/kernel/postinst.d/zz-efistub-upgrade.py
     
@@ -252,7 +249,7 @@ For safety reasons we'll also install & configure `systemd-boot` formerly known 
 
     Furthermore, you'll need to either wrap this in another script or modify the script to hardcode your ESP path, Search for `# Determining the ESP` in your favorite editor, delete the whole try-except block and assign the esp variable like `esp = /path`.
 
-4. Create EFI entry
+3. Create EFI entry
 
     Take note of the content of your `/etc/machine-id` in my case it was `52f380e6dcad40e28eb396d515d4e16d` 
 
@@ -273,7 +270,7 @@ For safety reasons we'll also install & configure `systemd-boot` formerly known 
        Boot0005* Linux Boot Manager	HD(1,GPT,1b922c5f-13b2-455f-9c0e-7953f70abe01,0x800,0x100000)   /File(\EFI\systemd\systemd-bootx64.efi)
        (chroot) efibootmgr -b 0004 -B
 
-5. Reboot
+4. Reboot
     Now that we're done with our bootloaders, we can reboot to our new installation.
     
     If you manually mounted `/etc/resolv.conf`, run `# umount /mnt/etc/resolv.conf` now.
