@@ -16,6 +16,7 @@ or installing [Arch Linux](archlinux.org).
 
     # denotes the commands to be run as the root user.
     $ denotes the commands to be run as a regular user or the root user.
+    <TEXT> fields should be customized by the user.
     (chroot) denotes the commands to be run in chroot.
     Text without any of those denotations are not meant to be run.
 
