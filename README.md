@@ -1,10 +1,10 @@
 # fedora-chroot-installation
-Scripts and guides for installing [Fedora](getfedora.org) via a chroot from a live system. Like you'd do in [Installing Debian GNU/Linux from a Unix/Linux System](https://www.debian.org/releases/stable/amd64/apds03.html.en)
+Scripts and guides for installing [Fedora](https://getfedora.org) via a chroot from a live system. Like you'd do in [Installing Debian GNU/Linux from a Unix/Linux System](https://www.debian.org/releases/stable/amd64/apds03.html.en)
 or installing [Arch Linux](https://archlinux.org).
 
 ## Common Things to Do
 
-1. Get a Fedora Workstation [image](https://download.fedoraproject.org/pub/fedora/linux/releases/28/Workstation/x86_64/iso/Fedora-Workstation-Live-x86_64-28-1.1.iso).
+1. Get a Fedora Workstation image [from here](https://getfedora.org/en/workstation/download/).
 
 2. Get comfortable with the live system. Configure network, keyboard layout, get root etc.
 
