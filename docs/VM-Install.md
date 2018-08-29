@@ -78,7 +78,7 @@ After you're done; press `[Write]`, type `yes` to the prompt, and quit `cgdisk`.
 
 Now that we have our partitions, it is time to put filesystems on them.
 
-Note: It is **not** necessary for the partition names we defined in `cgdisk` to match the filesystem labels we are going to use below, feel free to change them according to your needs.
+**Note:** It is **not** necessary for the partition names we defined in `cgdisk` to match the filesystem labels we are going to use below, feel free to change them according to your needs.
 
 * ESP (EFI System Partition)
 
@@ -137,15 +137,13 @@ After we are done partitioning; we can finally install the base system onto our 
 
 Confirm the prompts when asked.
 
-Let's go flag by flag on what this command does;
+Let's break down what this command does;
 
-* `--installroot=/mnt` means 'Install these packages into `/mnt` instead of `/`
-* `--releasever=28` means that we want to use Fedora 28 release.
-* `--setopt=install_weak_deps=False` says dnf that we don't want to have weak dependencies installed, more info about these switches can be found [here](https://dnf.readthedocs.io/en/latest/conf_ref.html)
-* `glibc-langpack-en` is the English langpack for glibc, in order to have a localized system install `glibc-langpack-<LANGCODE>` if no langpack is specified to install, dnf will install `glibc-all-langpacks` package which costs a whopping 100MB alone compared to installing them seperately which costs around 1MB per langpack. 
-* `rtkit` will be required for rebooting, powering off etc.
-* `file` is a tool to find the type of a file.
-* `efibootmgr` is the tool that we'll be using to manipulate EFI entries.
+* `--installroot=/mnt` treat `/mnt` as the installation root.
+* `--releasever=28` use Fedora 28 as target release, use `rawhide` if you want a 'rolling release' Fedora.
+* `--setopt=install_weak_deps=False` don't install weak dependencies(`--no-install-recommends` on Debian), more info about these switches can be found [here](https://dnf.readthedocs.io/en/latest/conf_ref.html)
+* `glibc-langpack-en` English langpack for glibc, in order to have a localized system install `glibc-langpack-<LANGCODE>` if no langpack is specified to install, dnf will install `glibc-all-langpacks` package which costs a whopping 100MB alone compared to installing them seperately which costs around 1MB per langpack. 
+* `rtkit`, `file`, `efibootmgr` See `dnf info PACKAGE_NAME` for details.
 * `@Core` is a small set of packages that's sufficient enough for the system to function.
 
 ## Configuration
@@ -155,8 +153,18 @@ Let's go flag by flag on what this command does;
       # cp zz-efistub-upgrade.py /mnt/etc/kernel/postinst.d/
       # chmod +x /mnt/etc/kernel/postinst.d/zz-efistub-upgrade.py
     
-* Configure the system locale, keymap, timezone, hostname and setup machine id on your new system, example command given below;
-
+* Configure the system locale, keymap, timezone, hostname and setup machine id on your new system, usage given below;
+    
+      # systemd-firstboot \
+      --root=/mnt \
+      --locale=<LOCALE> \
+      --keymap=<KEYMAP> \
+      --timezone=<TIMEZONE> \
+      --hostname=<HOSTNAME> \
+      --setup-machine-id
+    
+    Example;
+    
       # systemd-firstboot \
       --root=/mnt \
       --locale=en_US.UTF-8 \
