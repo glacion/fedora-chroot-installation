@@ -319,4 +319,5 @@ To confirm everything went correctly, we'll check the following items;
 Reboot when you're finished.
 
 And you're done! You can get the default Fedora Workstation installation by issuing the command below.
+
     # dnf install @Fedora\ Workstation
