@@ -20,5 +20,5 @@ or installing [Arch Linux](archlinux.org).
     Text without any of those denotations are not meant to be run.
 
 
-## Current Examples
+## Guides
 * [Installing on an UEFI Virtual Machine](docs/VM-Install.md)
