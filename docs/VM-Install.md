@@ -3,10 +3,8 @@
 Download required scripts
 
     $ mkdir src ; cd src
-    $ wget https://github.com/glacion/easy-chroot/releases/download/v1.0/chroot
-    $ wget https://github.com/glacion/genfstab/releases/download/1.0/genfstab
-    $ wget https://raw.githubusercontent.com/glacion/fedora-chroot-installation/master/scripts/zz-efistub-upgrade.py
-    $ chmod +x *
+    $ wget https://github.com/glacion/easy-chroot/releases/download/v1.0/chroot https://github.com/glacion/genfstab/releases/download/1.0/genfstab https://raw.githubusercontent.com/glacion/fedora-chroot-installation/master/scripts/zz-efistub-upgrade.py ; chmod +x *
+
 
 ## Partitioning
 For this VM we will have 3 partitions for `/`, `/boot` and `swap`.
@@ -133,7 +131,7 @@ After this your `lsblk` output should look like this;
 
 After we are done partitioning; we can finally install the base system onto our new partitions.
 
-    # dnf install --installroot=/mnt --releasever=28 --setopt=install_weak_deps=False glibc-langpack-en rtkit file efibootmgr @Core
+    # dnf install --installroot=/mnt --releasever=28 --setopt=install_weak_deps=False glibc-langpack-en rtkit file efibootmgr deltarpm @Core
 
 Confirm the prompts when asked.
 
@@ -143,7 +141,7 @@ Let's break down what this command does;
 * `--releasever=28` use Fedora 28 as target release, use `rawhide` if you want a 'rolling release' Fedora.
 * `--setopt=install_weak_deps=False` don't install weak dependencies(`--no-install-recommends` on Debian), more info about these switches can be found [here](https://dnf.readthedocs.io/en/latest/conf_ref.html)
 * `glibc-langpack-en` English langpack for glibc, in order to have a localized system install `glibc-langpack-<LANGCODE>` if no langpack is specified to install, dnf will install `glibc-all-langpacks` package which costs a whopping 100MB alone compared to installing them seperately which costs around 1MB per langpack. 
-* `rtkit`, `file`, `efibootmgr` See `dnf info PACKAGE_NAME` for details.
+* `rtkit`, `file`, `efibootmgr` See `dnf info <PACKAGE_NAME>` for details.
 * `@Core` is a small set of packages that's sufficient enough for the system to function.
 
 ## Configuration
@@ -151,7 +149,6 @@ Let's break down what this command does;
 * Copy the `zz-update-efistub.py` from the directory you cloned in the first steps to live system. The script will update the kernel and initrd to `/boot/<MACHINE_ID>/current`
 
       # cp zz-efistub-upgrade.py /mnt/etc/kernel/postinst.d/
-      # chmod +x /mnt/etc/kernel/postinst.d/zz-efistub-upgrade.py
     
 * Configure the system locale, keymap, timezone, hostname and setup machine id on your new system, usage given below;
     
@@ -173,7 +170,7 @@ Let's break down what this command does;
       --hostname=fedora \
       --setup-machine-id
 
-    Keep in mind that you can always copy the configuration that's in the live system you're running, see `systemd-firstboot --help` for details.
+    Keep in mind that you can always copy the configuration that's in the live system you're running, or let the tool prompt for each of them so you can select from a list if you don't know the names you're going to use. See `systemd-firstboot --help` for details.
 
 * Generate fstab
 
@@ -197,12 +194,12 @@ Let's break down what this command does;
 
 * Check Internet Connection in Chroot
     
-    If `ping google.com` fails but `ping 8.8.8.8` works, you need to get the `/etc/resolv.conf` from the host manually. simply exit the chroot, run 
+    If `ping google.com` fails but `ping 8.8.8.8` works, you need to get the `/etc/resolv.conf` from the host manually. Exit the chroot, run 
         
       # touch /mnt/etc/resolv.conf
       # mount -o bind /etc/resolv.conf /mnt/etc/resolv.conf
      
-    and chroot back in.
+    and chroot back in. 
 
 * Create a new user and give it a password
 
@@ -247,7 +244,7 @@ For safety reasons we'll also install & configure `systemd-boot` formerly known 
        options    root=LABEL=fedora ro rhgb quiet
 3. Copy the kernel and initramfs
        
-       (chroot) /etc/kernel/postinst.d/zz-update-efistub.py
+       (chroot) /etc/kernel/postinst.d/zz-efistub-upgrade.py
     
     **Note:** Take note that if you have your ESP mounted on a location different than `/boot` or `/boot/efi`, you'll have to run the script like below;
 
@@ -276,11 +273,14 @@ For safety reasons we'll also install & configure `systemd-boot` formerly known 
        Boot0005* Linux Boot Manager	HD(1,GPT,1b922c5f-13b2-455f-9c0e-7953f70abe01,0x800,0x100000)   /File(\EFI\systemd\systemd-bootx64.efi)
        (chroot) efibootmgr -b 0004 -B
 
-Now that we're done with our bootloaders, we can reboot to our new installation.
+5. Reboot
+    Now that we're done with our bootloaders, we can reboot to our new installation.
+    
+    If you manually mounted `/etc/resolv.conf`, run `# umount /mnt/etc/resolv.conf` now.
 
-    (chroot) exit
-    # umount -R /mnt
-    $ reboot
+       (chroot) exit
+       # umount -R /mnt
+       $ reboot
 
 ## Inside The New System
 
