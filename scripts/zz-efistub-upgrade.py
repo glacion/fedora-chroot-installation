@@ -4,9 +4,11 @@ from subprocess import check_output, CalledProcessError
 from shutil import copy2
 from os import makedirs, path, geteuid
 from sys import argv, exit
+from typing import Tuple, List, Optional
 
+Command = Tuple[str, ...]
 
-def read_cmd(cmd: list) -> str:
+def read_cmd(cmd: Command) -> str:
     """Reads the output of a command and decodes into utf8 string.
 
     Args:
@@ -17,7 +19,7 @@ def read_cmd(cmd: list) -> str:
     return check_output(cmd).decode('utf-8')
 
 
-def read_cmd_list(cmd: list) -> list:
+def read_cmd_list(cmd: Command) -> List[str]:
     """Creates a list of utf8 strings from the output of given command seperated by newline.
 
     Args:
@@ -28,7 +30,7 @@ def read_cmd_list(cmd: list) -> list:
     return read_cmd(cmd).splitlines()
 
 
-def find_esp() -> str:
+def find_esp() -> Optional[str]:
     """Locates the EFI System Partition's mountpoint.
        NOTE: It can only determine if the ESP is in /boot/efi or /boot. 
        If your ESP is mounted in another location, you must run this script with
@@ -42,7 +44,7 @@ def find_esp() -> str:
     for partition in partitions:
         if partition[-1] == '/boot/efi':
             esp = partition[-1]
-    if esp == None:
+    if esp is None:
         for partition in partitions:
             if partition[-1] == '/boot' and partition[1] == 'vfat':
                 esp = partition[-1]
