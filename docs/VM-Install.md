@@ -131,7 +131,7 @@ After this your `lsblk` output should look like this;
 
 After we are done partitioning; we can finally install the base system onto our new partitions.
 
-    # dnf install --installroot=/mnt --releasever=28 --setopt=install_weak_deps=False glibc-langpack-en rtkit file efibootmgr deltarpm kernel @Core
+    # dnf install --installroot=/mnt --releasever=28 --setopt=install_weak_deps=False glibc-langpack-en rtkit file efibootmgr deltarpm @Core
 
 Confirm the prompts when asked.
 
@@ -142,14 +142,13 @@ Let's break down what this command does;
 * `--setopt=install_weak_deps=False` don't install weak dependencies(`--no-install-recommends` on Debian), more info about these switches can be found [here](https://dnf.readthedocs.io/en/latest/conf_ref.html)
 * `glibc-langpack-en` English langpack for glibc, in order to have a localized system install `glibc-langpack-<LANGCODE>` if no langpack is specified to install, dnf will install `glibc-all-langpacks` package which costs a whopping 100MB alone compared to installing them seperately which costs around 1MB per langpack. 
 * `rtkit`, `file`, `efibootmgr`, `deltarpm` See `dnf info <PACKAGE_NAME>` for details.
-* `kernel` is the Linux kernel.
 * `@Core` is a small set of packages that's sufficient enough for the system to function.
 
 ## Configuration
 
 * Copy the `zz-update-efistub.py` from the directory you cloned in the first steps to live system. The script will update the kernel and initrd to `/boot/<MACHINE_ID>/current`
 
-      # cp zz-efistub-upgrade.py /mnt/etc/kernel/postinst.d/
+      # cp zz-efistub-upgrade.sh /mnt/etc/kernel/postinst.d/
     
 * Configure the system locale, keymap, timezone, hostname and setup machine id on your new system, usage given below;
     
@@ -191,7 +190,7 @@ Let's break down what this command does;
     After this installation, the selinux labels are likely to be broken and cause the system to not work properly, to fix this we'll set it to `permissive` until we recreate the labels.
     Issue this command;
 
-      # sed -i 's/=enforcing/=permissive/g' /etc/sysconfig/selinux
+      (chroot) sed -i 's/=enforcing/=permissive/g' /etc/sysconfig/selinux
 
 * Check Internet Connection in Chroot
     
@@ -204,14 +203,14 @@ Let's break down what this command does;
 
 * Create a new user and give it a password
 
-      # useradd -c "YOUR_FULL_NAME" -m -g users -G wheel -s /bin/bash YOUR_USERNAME
-      # passwd YOUR_USERNAME
+      (chroot) useradd -c "YOUR_FULL_NAME" -m -g users -G wheel -s /bin/bash YOUR_USERNAME
+      (chroot) passwd YOUR_USERNAME
 
 
 ## Cleanup
 Even though the system we installed is pretty minimal, there's always more room to clean up. 
 
-Note: Removing these packages are **not** required to have a functioning system, and the packages we are going to remove **can** break some functionality that you need, proceed with caution.
+Note: Removing these packages are **not** required to have a functioning system, and the packages we are going to remove **can** break some functionality that you may need, proceed with caution.
 
     (chroot) dnf remove dracut-config-rescue grubby man-db openssh-server parted
 
@@ -220,9 +219,11 @@ We'll be using the linux kernel's built-in capabilities without an external boot
 
 For safety reasons we'll also install & configure `systemd-boot` formerly known as `gummiboot`
 
-**Note:** If you're following this guide from VirtualBox, you should stick to a traditional bootloader since it doesn't really like it when we modify EFI variables directly. 
+1. Install the Kernel
 
-1. Installing `systemd-boot` as backup
+       (chroot) dnf install kernel
+
+2. Installing `systemd-boot` as backup
         
        (chroot) bootctl install
     
@@ -239,38 +240,29 @@ For safety reasons we'll also install & configure `systemd-boot` formerly known 
     to;
 
        options    root=LABEL=fedora ro rhgb quiet
-2. Copy the kernel and initramfs
+3. Copy the kernel and initramfs
        
-       (chroot) /etc/kernel/postinst.d/zz-efistub-upgrade.py
+       (chroot) /etc/kernel/postinst.d/zz-efistub-upgrade.sh
+
+4. Create EFI entry
     
-    **Note:** Take note that if you have your ESP mounted on a location different than `/boot` or `/boot/efi`, you'll have to run the script like below;
+    **Note:** If you're using VirtualBox, skip this step. It won't work.
 
-       (chroot) /etc/kernel/postinst.d/zz-update-efistub.py --esp /path/to/esp
-
-    Furthermore, you'll need to either wrap this in another script or modify the script to hardcode your ESP path, Search for `# Determining the ESP` in your favorite editor, delete the whole try-except block and assign the esp variable like `esp = /path`.
-
-3. Create EFI entry
-
-    Take note of the content of your `/etc/machine-id` in my case it was `52f380e6dcad40e28eb396d515d4e16d` 
-
-       (chroot) efibootmgr -d /dev/sda -p 1 -c -L 'fedora' -l /52f380e6dcad40e28eb396d515d4e16d/current/linux -u 'root=LABEL=fedora ro rhgb quiet initrd=/52f380e6dcad40e28eb396d515d4e16d/current/initrd'
+       (chroot) efibootmgr -d /dev/sda -p 1 -c -L 'Fedora' -l /EFI/fedora/linux -u 'root=LABEL=fedora ro rhgb quiet initrd=/EFI/fedora/initrd'
 
     **Note:** When your ESP is on `/dev/sda1` you can omit the `-d` and `-p` parts.
     
-    **Note:** When you want to edit the boot parameters, you need to delete the entry, and recreate it. Example;
+    **Note:** When you want to edit the boot parameters, you need to delete the entry, and recreate it. Deleting an entry is as shown;
 
        (chroot) efibootmgr -v
        BootCurrent: 0001
        BootOrder: 0004,0005,0000,0001,0002,0003
-       Boot0000* EFI VMware Virtual SCSI Hard Drive (0.0)	PciRoot(0x0)/Pci(0x10,0x0)/SCSI(0,0)
-       Boot0001* EFI VMware Virtual IDE CDROM Drive (IDE 1:0)	PciRoot(0x0)/Pci(0x7,0x1)/Ata(1,0,0)
-       Boot0002* EFI Network	PciRoot(0x0)/Pci(0x11,0x0)/Pci(0x0,0x0)/MAC(000c29a05543,0)
-       Boot0003* EFI Internal Shell (Unsupported option)	MemoryMapped(11,0xcb3a000,0xcfa0fff)   /FvFile(c57ad6b7-0515-40a8-9d21-551652854e37)
-       Boot0004* fedora	HD(1,GPT,1b922c5f-13b2-455f-9c0e-7953f70abe01,0x800,0x100000)/File   (\52f380e6dcad40e28eb396d515d4e16d\current\linux)r.o.o.t.=.L.A.B.E.L.=.f.e.d.o.r.a. .r.o.    .r.h.g.b. .q.u.i.e.t.    .i.n.i.t.r.d.=./.5.2.f.3.8.0.e.6.d.c.a.d.4.0.e.2.8.e.b.3.9.6.d.5.1.5.d.4.e.1.6.d./.c.u.r.r.e.   n.t./.i.n.i.t.r.d.
+       .....
+       Boot0004* fedora	HD(1,GPT,1b922c5f-13b2-455f-9c0e-7953f70abe01,0x800,0x100000)/File   (\52f380e6dcad40e28eb396d515d4e16d\current\linux) .....
        Boot0005* Linux Boot Manager	HD(1,GPT,1b922c5f-13b2-455f-9c0e-7953f70abe01,0x800,0x100000)   /File(\EFI\systemd\systemd-bootx64.efi)
        (chroot) efibootmgr -b 0004 -B
 
-4. Reboot
+5. Reboot
     Now that we're done with our bootloaders, we can reboot to our new installation.
     
     If you manually mounted `/etc/resolv.conf`, run `# umount /mnt/etc/resolv.conf` now.
@@ -304,25 +296,7 @@ To confirm everything went correctly, we'll check the following items;
 
 * The output from `$ systemctl status` should show State as `running`.
 * `$ ping google.com` should work fine.
-* `$ reboot` should work fine.
 * `$ getenforce` should return 'Enforcing'
+* `$ reboot` should work fine.
 
-### Cleanup
-
-* When we set SELinux to permissive at the beginning, we told SELinux to only *log* the denials, and this might have cluttered up the logs, we'll clean them now.
-
-       # rm -rf /var/log/*
-
-* Clean the caches.
-
-       # rm -rf /var/cache/*
-
-* Clean up `dnf`.
-       
-       # dnf clean all
-
-Reboot when you're finished.
-
-And you're done! You can get the default Fedora Workstation installation by issuing the command below.
-
-    # dnf install @Fedora\ Workstation
+If all is well, you're done!
