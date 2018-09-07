@@ -3,7 +3,7 @@
 Download required scripts
 
     $ mkdir src ; cd src
-    $ wget https://github.com/glacion/easy-chroot/releases/download/v1.0/chroot https://github.com/glacion/genfstab/releases/download/1.0/genfstab https://raw.githubusercontent.com/glacion/fedora-chroot-installation/master/scripts/zz-efistub-upgrade.py ; chmod +x *
+    $ wget https://raw.githubusercontent.com/glacion/easy-chroot/master/chroot https://github.com/glacion/genfstab/releases/download/1.0/genfstab https://raw.githubusercontent.com/glacion/fedora-chroot-installation/master/scripts/zz-efistub-upgrade.sh ; chmod +x *
 
 
 ## Partitioning
@@ -146,7 +146,7 @@ Let's break down what this command does;
 
 ## Configuration
 
-* Copy the `zz-update-efistub.py` from the directory you cloned in the first steps to live system. The script will update the kernel and initrd to `/boot/<MACHINE_ID>/current`
+* Copy the `zz-update-efistub.sh` from the directory you cloned in the first steps to live system. The script will update the kernel and initrd to `/<ESP>/<TARGET_PATH>`, defaults to `/boot/EFI/fedora`. Open the script in your favorite editor and edit the values to your need.
 
       # cp zz-efistub-upgrade.sh /mnt/etc/kernel/postinst.d/
     
