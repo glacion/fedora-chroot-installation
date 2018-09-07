@@ -8,6 +8,7 @@ from typing import Tuple, List, Optional
 
 Command = Tuple[str, ...]
 
+
 def read_cmd(cmd: Command) -> str:
     """Reads the output of a command and decodes into utf8 string.
 
@@ -20,21 +21,23 @@ def read_cmd(cmd: Command) -> str:
 
 
 def read_cmd_list(cmd: Command) -> List[str]:
-    """Creates a list of utf8 strings from the output of given command seperated by newline.
+    """Creates a list of utf8 strings from the output of given command
+    seperated by newline.
 
     Args:
         cmd: Command to run.
     Returns:
-        List of utf8 strings from the output of given command seperated by newline.
+        List of utf8 strings from the output of given command
+        seperated by newline.
     """
     return read_cmd(cmd).splitlines()
 
 
 def find_esp() -> Optional[str]:
     """Locates the EFI System Partition's mountpoint.
-       NOTE: It can only determine if the ESP is in /boot/efi or /boot. 
-       If your ESP is mounted in another location, you must run this script with
-       --esp flag, eg. '--esp /tmp' 
+       NOTE: It can only determine if the ESP is in /boot/efi or /boot.
+       If your ESP is mounted in another location, you must run this script
+       with --esp flag, eg. '--esp /tmp'
 
     Returns:
         Mountpoint of EFI System Partition
@@ -56,11 +59,11 @@ def get_paths(pkg_name: str, target_path: str) -> tuple:
 
     Args:
         pkg_name: Full name of a package.
-        target_path: Path that dnf will use to install kernel & initrd 
-                     if it decides to install to ESP directly, mainly located at
-                     /<ESP>/<MACHINE_ID>/
+        target_path: Path that dnf will use to install kernel & initrd
+                     if it decides to install to ESP directly, mainly located
+                     at /<ESP>/<MACHINE_ID>/
     Returns:
-        A tuple with kernel's path at index 0 and initrd's path at index 1. 
+        A tuple with kernel's path at index 0 and initrd's path at index 1.
     """
     initrd = kernel = None
     pkg_files = read_cmd_list(('rpm', '-ql', pkg_name))
@@ -74,7 +77,7 @@ def get_paths(pkg_name: str, target_path: str) -> tuple:
     # In some situations, the kernel & initrd path found in the package doesn't
     # exist in the filesystem. The files will be found in /<ESP>/<MACHINE_ID>/
     # See /bin/kernel-install for specifics of this situation.
-    if kernel == None or initrd == None:
+    if kernel is None or initrd is None:
         pkg_ver = pkg_name.replace('kernel-core-', '')
         kernel = f'{target_path}/{pkg_ver}/linux'
         initrd = f'{target_path}/{pkg_ver}/initrd'
@@ -114,11 +117,10 @@ initrd = target_path + pkg[1]
 
 
 # Create target directory if it doesn't exist
-if not path.exists(target_path + '/current/'):
-    makedirs(target_path + '/current')
-    pass
+if not path.exists(esp + '/EFI/fedora/'):
+    makedirs(esp + '/EFI/fedora/')
 
 
 # Copy files to destination
-copy2(pkg[0], target_path + '/current/linux')
-copy2(pkg[1], target_path + '/current/initrd')
+copy2(pkg[0], esp + '/EFI/fedora/linux')
+copy2(pkg[1], esp + '/EFI/fedora/initrd')
