@@ -148,10 +148,6 @@ Let's break down what this command does;
 
 ## Configuration
 
-* Copy the `zz-update-efistub.sh` from the directory you cloned in the first steps to live system. The script will update the kernel and initrd to `/<ESP>/<TARGET_PATH>`, defaults to `/boot/EFI/fedora`. Open the script in your favorite editor and edit the values to your need.
-
-      # cp zz-efistub-upgrade.sh /mnt/etc/kernel/postinst.d/
-
 * Configure the system locale, keymap, timezone, hostname and setup machine id on your new system, usage given below;
 
       # systemd-firstboot \
@@ -213,19 +209,17 @@ Even though the system we installed is pretty minimal, there's always more room 
 
 Note: Removing these packages are **not** required to have a functioning system, and the packages we are going to remove **can** break some functionality that you may need, proceed with caution.
 
-    (chroot) dnf remove dracut-config-rescue grubby man-db openssh-server parted
+    (chroot) dnf remove dracut-config-rescue grubby man-db openssh-server parted sssd-common
 
 ## Bootloader
 
-We'll be using the linux kernel's built-in capabilities without an external bootloader.
-
-For safety reasons we'll also install & configure `systemd-boot` formerly known as `gummiboot`
+We'll be using `systemd-boot` formerly known as `gummiboot`, instead of GRUB.
 
 1. Install the Kernel
 
        (chroot) dnf install kernel
 
-2. Installing `systemd-boot` as backup
+2. Installing `systemd-boot`
 
        (chroot) bootctl install
 
@@ -242,29 +236,8 @@ For safety reasons we'll also install & configure `systemd-boot` formerly known 
     to;
 
        options    root=LABEL=fedora ro rhgb quiet
-3. Copy the kernel and initramfs
 
-       (chroot) /etc/kernel/postinst.d/zz-efistub-upgrade.sh
-
-4. Create EFI entry
-
-    **Note:** If you're using VirtualBox, skip this step. It won't work.
-
-       (chroot) efibootmgr -d /dev/sda -p 1 -c -L 'Fedora' -l /EFI/fedora/linux -u 'root=LABEL=fedora ro rhgb quiet initrd=/EFI/fedora/initrd'
-
-    **Note:** When your ESP is on `/dev/sda1` you can omit the `-d` and `-p` parts.
-
-    **Note:** When you want to edit the boot parameters, you need to delete the entry, and recreate it. Deleting an entry is as shown;
-
-       (chroot) efibootmgr -v
-       BootCurrent: 0001
-       BootOrder: 0004,0005,0000,0001,0002,0003
-       .....
-       Boot0004* fedora HD(1,GPT,1b922c5f-13b2-455f-9c0e-7953f70abe01,0x800,0x100000)/File   (\52f380e6dcad40e28eb396d515d4e16d\current\linux) .....
-       Boot0005* Linux Boot Manager HD(1,GPT,1b922c5f-13b2-455f-9c0e-7953f70abe01,0x800,0x100000)   /File(\EFI\systemd\systemd-bootx64.efi)
-       (chroot) efibootmgr -b 0004 -B
-
-5. Reboot
+3. Reboot
     Now that we're done with our bootloaders, we can reboot to our new installation.
 
     If you manually mounted `/etc/resolv.conf`, run `# umount /mnt/etc/resolv.conf` now.
