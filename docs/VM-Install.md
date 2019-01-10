@@ -4,7 +4,7 @@ Download required scripts
 
     mkdir src
     cd src
-    $ wget https://raw.githubusercontent.com/glacion/easy-chroot/master/chroot https://github.com/glacion/genfstab/releases/download/1.0/genfstab https://raw.githubusercontent.com/glacion/fedora-chroot-installation/master/scripts/zz-efistub-upgrade.sh ; chmod +x *
+    $ wget https://raw.githubusercontent.com/glacion/easy-chroot/master/chroot https://github.com/glacion/genfstab/releases/download/1.0/genfstab; chmod +x *
 
 ## Partitioning
 
@@ -133,7 +133,7 @@ After this your `lsblk` output should look like this;
 
 After we are done partitioning; we can finally install the base system onto our new partitions.
 
-    # dnf install --installroot=/mnt --releasever=28 --setopt=install_weak_deps=False glibc-langpack-en rtkit file efibootmgr deltarpm @Core
+    # dnf install --installroot=/mnt --releasever=28 --setopt=install_weak_deps=False glibc-langpack-en rtkit file deltarpm @Core
 
 Confirm the prompts when asked.
 
@@ -143,7 +143,7 @@ Let's break down what this command does;
 * `--releasever=28` use Fedora 28 as target release, use `rawhide` if you want a 'rolling release' Fedora.
 * `--setopt=install_weak_deps=False` don't install weak dependencies(`--no-install-recommends` on Debian), more info about these switches can be found [here](https://dnf.readthedocs.io/en/latest/conf_ref.html)
 * `glibc-langpack-en` English langpack for glibc, in order to have a localized system install `glibc-langpack-<LANGCODE>` if no langpack is specified to install, dnf will install `glibc-all-langpacks` package which costs a whopping 100MB alone compared to installing them seperately which costs around 1MB per langpack.
-* `rtkit`, `file`, `efibootmgr`, `deltarpm` See `dnf info <PACKAGE_NAME>` for details.
+* `rtkit`, `file`, `deltarpm` See `dnf info <PACKAGE_NAME>` for details.
 * `@Core` is a small set of packages that's sufficient enough for the system to function.
 
 ## Configuration
