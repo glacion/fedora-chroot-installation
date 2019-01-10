@@ -215,13 +215,13 @@ Note: Removing these packages are **not** required to have a functioning system,
 
 We'll be using `systemd-boot` formerly known as `gummiboot`, instead of GRUB.
 
-1. Install the Kernel
-
-       (chroot) dnf install kernel
-
-2. Installing `systemd-boot`
+1. Installing `systemd-boot`
 
        (chroot) bootctl install
+
+2. Install the Kernel
+
+       (chroot) dnf install kernel
 
     We need to fix boot parameters. After installing the kernel, the auto-generated entry uses the boot parameters of the live system. The entry exists in `/boot/loader/entries/<MACHINE_ID>-<KVER>.conf`
 
