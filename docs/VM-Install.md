@@ -2,9 +2,7 @@
 
 Download required scripts
 
-    mkdir src
-    cd src
-    $ wget https://raw.githubusercontent.com/glacion/easy-chroot/master/chroot https://github.com/glacion/genfstab/releases/download/1.0/genfstab; chmod +x *
+    $ wget https://github.com/glacion/genfstab/releases/download/1.0/genfstab; chmod +x genfstab
 
 ## Partitioning
 
@@ -133,14 +131,14 @@ After this your `lsblk` output should look like this;
 
 After we are done partitioning; we can finally install the base system onto our new partitions.
 
-    # dnf install --installroot=/mnt --releasever=28 --setopt=install_weak_deps=False glibc-langpack-en rtkit file deltarpm @Core
+    # dnf install --installroot=/mnt --releasever=29 --setopt=install_weak_deps=False glibc-langpack-en rtkit file deltarpm @Core
 
 Confirm the prompts when asked.
 
 Let's break down what this command does;
 
 * `--installroot=/mnt` treat `/mnt` as the installation root.
-* `--releasever=28` use Fedora 28 as target release, use `rawhide` if you want a 'rolling release' Fedora.
+* `--releasever=29` use Fedora 28 as target release, use `rawhide` if you want a 'rolling release' Fedora.
 * `--setopt=install_weak_deps=False` don't install weak dependencies(`--no-install-recommends` on Debian), more info about these switches can be found [here](https://dnf.readthedocs.io/en/latest/conf_ref.html)
 * `glibc-langpack-en` English langpack for glibc, in order to have a localized system install `glibc-langpack-<LANGCODE>` if no langpack is specified to install, dnf will install `glibc-all-langpacks` package which costs a whopping 100MB alone compared to installing them seperately which costs around 1MB per langpack.
 * `rtkit`, `file`, `deltarpm` See `dnf info <PACKAGE_NAME>` for details.
@@ -180,29 +178,25 @@ Let's break down what this command does;
 
 * Chroot to Our New Installation
 
-      # ./chroot /mnt
-
-* Selinux
-
-    After this installation, the selinux labels are likely to be broken and cause the system to not work properly, to fix this we'll set it to `permissive` until we recreate the labels.
-    Issue this command;
-
-      (chroot) sed -i 's/=enforcing/=permissive/g' /etc/sysconfig/selinux
-
-* Check Internet Connection in Chroot
-
-    If `ping google.com` fails but `ping 8.8.8.8` works, you need to get the `/etc/resolv.conf` from the host manually. Exit the chroot, run
-
-      # touch /mnt/etc/resolv.conf
-      # mount -o bind /etc/resolv.conf /mnt/etc/resolv.conf
-
-    and chroot back in.
+      # systemd-nspawn -D /mnt
 
 * Create a new user and give it a password
 
       (chroot) useradd -c "YOUR_FULL_NAME" -m -g users -G wheel -s /bin/bash YOUR_USERNAME
       (chroot) passwd YOUR_USERNAME
 
+* Exit and boot the system as a container
+
+      # systemd-nspawn -bD /mnt
+    
+    Login with the credentials you just created.
+
+* Selinux
+
+    To recreate the SELinux Labels issue this command, omitting to do this causes selinux to fail most of the system's capabilities.
+
+      fixfiles -F onboot
+      
 ## Cleanup
 
 Even though the system we installed is pretty minimal, there's always more room to clean up.
@@ -237,6 +231,9 @@ We'll be using `systemd-boot` formerly known as `gummiboot`, instead of GRUB.
 
        options    root=LABEL=fedora ro rhgb quiet
 
+    If the `.conf` file doesn't appear in the directory, issue `dnf reinstall kernel-core` command.
+    
+
 3. Reboot
     Now that we're done with our bootloaders, we can reboot to our new installation.
 
@@ -246,26 +243,7 @@ We'll be using `systemd-boot` formerly known as `gummiboot`, instead of GRUB.
        # umount -R /mnt
        $ reboot
 
-## Inside The New System
-
-### SELinux
-
-Well, we now have a *somewhat* working system, even though it just hanged at boot for 1 min 30 seconds trying to raise auditd.service.
-
-This happened because our new installation does not have proper SELinux file labels.
-
-To recreate the SELinux Labels issue this command and reboot.
-
-    # fixfiles -F onboot
-    # reboot
-
-The next boot will take significantly longer, as it will rebuild the labels.
-
-After system rebuilds the labels and reboots again, we can set enforcing back again, to do this issue this command;
-
-    # sed -i 's/=permissive/=enforcing/g' /etc/sysconfig/selinux
-
-After a reboot, the system should work fine under enforcing SELinux.
+## Post-Install Checks
 
 To confirm everything went correctly, we'll check the following items;
 
