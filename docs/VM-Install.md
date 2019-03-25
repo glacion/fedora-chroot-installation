@@ -131,18 +131,15 @@ After this your `lsblk` output should look like this;
 
 After we are done partitioning; we can finally install the base system onto our new partitions.
 
-    # dnf install --installroot=/mnt --releasever=29 --setopt=install_weak_deps=False glibc-langpack-en rtkit file deltarpm @Core
+    # dnf install --installroot=/mnt --releasever=29 --setopt=install_weak_deps=False glibc-langpack-en rtkit file NetworkManager audit dnf dnf-plugins-core firewalld iproute policycoreutils rpm selinux-policy-targeted shadow-utils sudo vim-minimal hostname iputils less passwd procps-ng 
 
 Confirm the prompts when asked.
 
-Let's break down what this command does;
-
 * `--installroot=/mnt` treat `/mnt` as the installation root.
-* `--releasever=29` use Fedora 28 as target release, use `rawhide` if you want a 'rolling release' Fedora.
+* `--releasever=29` use Fedora 29 as target release, use `rawhide` if you want a 'rolling release' Fedora.
 * `--setopt=install_weak_deps=False` don't install weak dependencies(`--no-install-recommends` on Debian), more info about these switches can be found [here](https://dnf.readthedocs.io/en/latest/conf_ref.html)
-* `glibc-langpack-en` English langpack for glibc, in order to have a localized system install `glibc-langpack-<LANGCODE>` if no langpack is specified to install, dnf will install `glibc-all-langpacks` package which costs a whopping 100MB alone compared to installing them seperately which costs around 1MB per langpack.
-* `rtkit`, `file`, `deltarpm` See `dnf info <PACKAGE_NAME>` for details.
-* `@Core` is a small set of packages that's sufficient enough for the system to function.
+* `glibc-langpack-en` English langpack for glibc, in order to have a localized system install `glibc-langpack-<LANGCODE>` if no langpack is specified to install, dnf will install `glibc-all-langpacks` package which costs a whopping 100MB alone compared to installing them seperately which costs around 1MB per langpack. Use a different langcode if you want to use a different locale.
+* Other packages are selected from the `Core` group, the other packages in that group will either be installed later or won't be required. 
 
 ## Configuration
 
@@ -197,14 +194,6 @@ Let's break down what this command does;
 
       fixfiles -F onboot
       
-## Cleanup
-
-Even though the system we installed is pretty minimal, there's always more room to clean up.
-
-Note: Removing these packages are **not** required to have a functioning system, and the packages we are going to remove **can** break some functionality that you may need, proceed with caution.
-
-    (chroot) dnf remove dracut-config-rescue grubby man-db openssh-server parted sssd-common
-
 ## Bootloader
 
 We'll be using `systemd-boot` formerly known as `gummiboot`, instead of GRUB.
